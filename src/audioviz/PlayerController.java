@@ -9,7 +9,9 @@ import java.io.File;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Observable;
 import java.util.ResourceBundle;
+import javafx.beans.InvalidationListener;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -155,8 +157,19 @@ public class PlayerController implements Initializable {
             });
             mediaPlayer.setAudioSpectrumNumBands(numBands);
             mediaPlayer.setAudioSpectrumInterval(updateInterval);
+            
+            // Listen for changes to the Slider
+            InvalidationListener sliderChangeListener = o-> {
+                Duration seekTo = Duration.millis(timeSlider.getValue());
+                mediaPlayer.seek(seekTo);
+            };
+            timeSlider.valueProperty().addListener(sliderChangeListener);
+            
             mediaPlayer.setAudioSpectrumListener((double timestamp, double duration, float[] magnitudes, float[] phases) -> {
+                timeSlider.valueProperty().removeListener(sliderChangeListener);
                 handleUpdate(timestamp, duration, magnitudes, phases);
+                // Re-add the slider listener
+                timeSlider.valueProperty().addListener(sliderChangeListener);
             });
             filePathText.setText(file.getPath());
         } catch (Exception ex) {
@@ -166,7 +179,6 @@ public class PlayerController implements Initializable {
     
     private void handleReady() {      
         Duration duration = mediaPlayer.getTotalDuration();
-//        lengthText.setText(duration.toString());
         Double durationInMillis = duration.toMillis();
         DecimalFormat df = new DecimalFormat("#.0");
         lengthText.setText(df.format(durationInMillis) + " ms");
@@ -186,7 +198,7 @@ public class PlayerController implements Initializable {
     private void handleUpdate(double timestamp, double duration, float[] magnitudes, float[] phases) {
         Duration ct = mediaPlayer.getCurrentTime();
         double ms = ct.toMillis();
-//        currentText.setText(Double.toString(ms));
+        currentText.setText(Double.toString(ms));
         DecimalFormat df = new DecimalFormat("#.0");
         currentText.setText(df.format(ms) + " ms");
         timeSlider.setValue(ms);
