@@ -159,17 +159,15 @@ public class PlayerController implements Initializable {
             mediaPlayer.setAudioSpectrumInterval(updateInterval);
             
             // Listen for changes to the Slider
-            InvalidationListener sliderChangeListener = o-> {
+            InvalidationListener sliderChangeListener = o -> {
                 Duration seekTo = Duration.millis(timeSlider.getValue());
                 mediaPlayer.seek(seekTo);
             };
-            timeSlider.valueProperty().addListener(sliderChangeListener);
             
             mediaPlayer.setAudioSpectrumListener((double timestamp, double duration, float[] magnitudes, float[] phases) -> {
                 timeSlider.valueProperty().removeListener(sliderChangeListener);
                 handleUpdate(timestamp, duration, magnitudes, phases);
-                // Re-add the slider listener
-                timeSlider.valueProperty().addListener(sliderChangeListener);
+                timeSlider.valueProperty().addListener(sliderChangeListener); // Re-add the slider listener
             });
             filePathText.setText(file.getPath());
         } catch (Exception ex) {
